@@ -1,19 +1,37 @@
 package org.ccci.gto.pdi.ui.trans.steps.googlespreadsheet;
 
-import com.google.gdata.client.Query;
-import com.google.gdata.client.spreadsheet.FeedURLFactory;
-import com.google.gdata.client.spreadsheet.SpreadsheetService;
-import com.google.gdata.data.spreadsheet.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.util.List;
+
+import javax.security.auth.x500.X500Principal;
+
 import org.ccci.gto.pdi.trans.steps.googlespreadsheet.GoogleSpreadsheet;
 import org.ccci.gto.pdi.trans.steps.googlespreadsheet.GoogleSpreadsheetInputMeta;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.*;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.Props;
 import org.pentaho.di.core.row.ValueMeta;
@@ -30,14 +48,15 @@ import org.pentaho.di.ui.core.widget.ComboValuesSelectionListener;
 import org.pentaho.di.ui.core.widget.TableView;
 import org.pentaho.di.ui.trans.step.BaseStepDialog;
 
-import javax.security.auth.x500.X500Principal;
-import java.io.File;
-import java.io.FileInputStream;
-import java.net.URL;
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-import java.util.List;
+import com.google.gdata.client.Query;
+import com.google.gdata.client.spreadsheet.FeedURLFactory;
+import com.google.gdata.client.spreadsheet.SpreadsheetService;
+import com.google.gdata.data.spreadsheet.ListEntry;
+import com.google.gdata.data.spreadsheet.ListFeed;
+import com.google.gdata.data.spreadsheet.SpreadsheetEntry;
+import com.google.gdata.data.spreadsheet.SpreadsheetFeed;
+import com.google.gdata.data.spreadsheet.WorksheetEntry;
+import com.google.gdata.data.spreadsheet.WorksheetFeed;
 
 @SuppressWarnings("WeakerAccess")
 public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements StepDialogInterface {
@@ -49,6 +68,7 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
     private Label privateKeyInfo;
     private Label testServiceAccountInfo;
     private Text serviceEmail;
+    private Text keyFileLocation;
     private KeyStore privateKeyStore;
     private Text spreadsheetKey;
     private Text worksheetId;
@@ -59,7 +79,7 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         this.meta = (GoogleSpreadsheetInputMeta) in;
     }
 
-    @Override
+    // @Override
     public String open() {
         Shell parent = this.getParent();
         Display display = parent.getDisplay();
@@ -69,7 +89,7 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         setShellImage(shell, meta);
 
         ModifyListener modifiedListener = new ModifyListener() {
-            @Override
+            // @Override
             public void modifyText(ModifyEvent e) {
                 meta.setChanged();
             }
@@ -77,7 +97,7 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         changed = meta.hasChanged();
 
         ModifyListener contentListener = new ModifyListener() {
-            @Override
+            // @Override
             public void modifyText(ModifyEvent arg0) {
                 // asyncUpdatePreview();
             }
@@ -162,6 +182,16 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         privateKeyLabelForm.right = new FormAttachment(middle, -margin);
         privateKeyLabel.setLayoutData(privateKeyLabelForm);
 
+        // Private Key -- file location
+        keyFileLocation = new Text(serviceAccountComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+        props.setLook(keyFileLocation);
+        // keyFileLocation.addModifyListener(modifiedListener);
+        FormData keyFileLocationData = new FormData();
+        serviceEmailData.top = new FormAttachment(0, margin);
+        serviceEmailData.left = new FormAttachment(middle, 0);
+        serviceEmailData.right = new FormAttachment(100, 0);
+        serviceEmail.setLayoutData(keyFileLocationData);
+
         privateKeyInfo = new Label(serviceAccountComposite, SWT.CENTER);
         props.setLook(privateKeyInfo);
         FormData privateKeyInfoData = new FormData();
@@ -173,7 +203,7 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         // privateKey - Button
         Button privateKeyButton = new Button(serviceAccountComposite, SWT.PUSH | SWT.CENTER);
         props.setLook(privateKeyButton);
-        privateKeyButton.setText("Browse");
+        privateKeyButton.setText("Verify");
         FormData privateKeyButtonForm = new FormData();
         privateKeyButtonForm.top = new FormAttachment(privateKeyInfo, margin);
         privateKeyButtonForm.left = new FormAttachment(middle, 0);
@@ -387,19 +417,19 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         BaseStepDialog.positionBottomButtons(shell, new Button[]{wOK, wCancel}, margin, tabFolder);
 
         lsCancel = new Listener() {
-            @Override
+            // @Override
             public void handleEvent(Event e) {
                 cancel();
             }
         };
         lsOK = new Listener() {
-            @Override
+            // @Override
             public void handleEvent(Event e) {
                 ok();
             }
         };
         lsGet = new Listener() {
-            @Override
+            // @Override
             public void handleEvent(Event e) {
                 getSpreadsheetFields();
             }
@@ -421,10 +451,7 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         privateKeyButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                FileDialog dialog = new FileDialog(shell, SWT.OPEN);
-                dialog.setFilterExtensions(new String[]{"*.p12", "*"});
-                dialog.setFilterNames(new String[]{"Private Key files", "All Files"});
-                String filename = dialog.open();
+                String filename = (String) keyFileLocation.getData();
                 if (filename != null) {
                     try {
                         File keyfile = new File(filename);
@@ -447,6 +474,7 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
                 }
             }
         });
+
 
         testServiceAccountButton.addSelectionListener(new SelectionAdapter() {
             @Override
