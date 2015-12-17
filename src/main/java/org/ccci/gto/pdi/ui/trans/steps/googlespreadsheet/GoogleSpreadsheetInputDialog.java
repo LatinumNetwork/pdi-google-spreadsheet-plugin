@@ -456,7 +456,7 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
                 // dialog.setFilterNames(new String[] { "Private Key files", "All Files" });
                 // String filename = dialog.open();
 
-                String filename = (String) keyFileLocation.getData();
+                String filename = keyFileLocation.getText();
                 if (filename != null) {
                     try {
                         File keyfile = new File(filename);
@@ -476,6 +476,8 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
                         privateKeyStore = null;
                         privateKeyInfo.setText("Invalid key file");
                     }
+                } else {
+                    privateKeyInfo.setText("NO KEY FILE!");
                 }
             }
         });
