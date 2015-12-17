@@ -182,16 +182,6 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         privateKeyLabelForm.right = new FormAttachment(middle, -margin);
         privateKeyLabel.setLayoutData(privateKeyLabelForm);
 
-        // Private Key -- file location
-        keyFileLocation = new Text(serviceAccountComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-        props.setLook(keyFileLocation);
-        // keyFileLocation.addModifyListener(modifiedListener);
-        FormData keyFileLocationData = new FormData();
-        serviceEmailData.top = new FormAttachment(0, margin);
-        serviceEmailData.left = new FormAttachment(middle, 0);
-        serviceEmailData.right = new FormAttachment(100, 0);
-        serviceEmail.setLayoutData(keyFileLocationData);
-
         privateKeyInfo = new Label(serviceAccountComposite, SWT.CENTER);
         props.setLook(privateKeyInfo);
         FormData privateKeyInfoData = new FormData();
@@ -208,6 +198,16 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         privateKeyButtonForm.top = new FormAttachment(privateKeyInfo, margin);
         privateKeyButtonForm.left = new FormAttachment(middle, 0);
         privateKeyButton.setLayoutData(privateKeyButtonForm);
+
+        // Private Key -- file location
+        keyFileLocation = new Text(serviceAccountComposite, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+        props.setLook(keyFileLocation);
+        keyFileLocation.addModifyListener(modifiedListener);
+        FormData keyFileLocationData = new FormData();
+        keyFileLocationData.top = new FormAttachment(privateKeyButton, 20);
+        keyFileLocationData.left = new FormAttachment(middle, 0);
+        keyFileLocationData.right = new FormAttachment(100, 0);
+        keyFileLocation.setLayoutData(keyFileLocationData);
 
         // test service - Button
         Button testServiceAccountButton = new Button(serviceAccountComposite, SWT.PUSH | SWT.CENTER);
@@ -451,6 +451,11 @@ public class GoogleSpreadsheetInputDialog extends BaseStepDialog implements Step
         privateKeyButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+                // FileDialog dialog = new FileDialog(shell, SWT.OPEN);
+                // dialog.setFilterExtensions(new String[] { "*.p12", "*" });
+                // dialog.setFilterNames(new String[] { "Private Key files", "All Files" });
+                // String filename = dialog.open();
+
                 String filename = (String) keyFileLocation.getData();
                 if (filename != null) {
                     try {
